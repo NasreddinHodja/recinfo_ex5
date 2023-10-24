@@ -77,9 +77,9 @@ class TFIDF:
 
 
 class BM25:
-    def __init__(self, documents, terms):
-        self.K = 1.2
-        self.b = 0.75
+    def __init__(self, documents, terms, K=1.2, b=0.75):
+        self.K = K
+        self.b = b
         self.N = len(documents)
         self.documents = documents
 
@@ -125,6 +125,41 @@ class BM25:
         return self.matrix[query].T.sum().sort_values(ascending=False)
 
 
+class Evaluator:
+    def recall(A, R):
+        return len(np.intersect1d(A, R)) / len(R)
+
+    def precision(A, R):
+        return len(np.intersect1d(A, R)) / len(A)
+
+    def recall_and_precision(A, R):
+        rp = pd.DataFrame(columns=["recall", "precision"])
+
+        for i in range(0, len(A) + 1):
+            a = A[:i]
+            if i == 0 or i != len(A) and A[i] not in R or not len(np.intersect1d(a, R)):
+                continue
+
+            print(a)
+            recall = Evaluator.recall(a, R)
+            precision = Evaluator.precision(a, R)
+            print(a, R, recall, precision)
+            new_row = {"recall": recall, "precision": precision}
+            rp.loc[len(rp)] = new_row
+
+        return rp.sort_values("recall")
+
+    def interpolated_precision(rec_and_pre):
+        index = np.array(range(10 + 1)) / 10
+        ip = pd.DataFrame(columns=["precision"], index=index)
+
+        for idx, row in rec_and_pre.iterrows():
+            indexes = index[index <= row["recall"]]
+            ip.loc[indexes] = rec_and_pre["precision"].loc[idx:].max()
+
+        return ip
+
+
 def main():
     # documentos
     dictionary = np.array(
@@ -134,7 +169,6 @@ def main():
             "O peã lac o boi",
             "Caval de rodei!",
             "Polic o jog no xadrez.",
-            "xadrez peã caval torr",
         ]
     )
     stopwords = ["a", "o", "e", "é", "de", "do", "no", "são"]  # lista de stopwords
@@ -149,17 +183,27 @@ def main():
     terms = np.array(sorted(list(set([term for l in tokens_list for term in l]))))
     query = np.array(query.split())
 
+    # retrieval
     tfidf = TFIDF(tokens_list, terms)
     tfidf.generate_matrix()
     query_weights = TFIDF(np.array([query]), terms)
     query_weights.generate_matrix()
     tfidf_ranks = TFIDF.rank(tfidf.matrix, query_weights.matrix)
-    print(tfidf_ranks)
+    # print(tfidf_ranks)
 
     bm25 = BM25(tokens_list, terms)
     bm25.generate_bm_matrix()
     bm25_ranks = bm25.rank(query)
-    print(bm25_ranks)
+    # print(bm25_ranks.index)
+
+    # avaliation
+    R = np.array([1, 2, 6, 9])
+    # A = tfidf_ranks
+    A = np.array([9, 3, 4, 1, 2])
+    recall_and_precision = Evaluator.recall_and_precision(A, R)
+    print(recall_and_precision)
+    interpolated_precision = Evaluator.interpolated_precision(recall_and_precision)
+    print(interpolated_precision)
 
 
 if __name__ == "__main__":
