@@ -31,6 +31,51 @@ def remove_stopwords(tokens_list, stopwords):
     ]
 
 
+class TFIDF:
+    def __init__(self, documents, terms):
+        self.documents = documents
+        self.terms = terms
+
+        self.matrix = pd.DataFrame(index=terms, columns=range(len(documents)))
+        self.N = len(documents)
+
+    def weigh_term(frequency, frequency_in_collection, N):
+        return (
+            1 + np.log2(frequency) * np.log2(N / frequency_in_collection)
+            if frequency > 0
+            else 0
+        )
+
+    def weigh_row(self, term):
+        frequencies = np.array(
+            list(map(lambda doc: np.count_nonzero(doc == term), self.documents))
+        )
+        frequency_in_collection = np.count_nonzero(
+            np.concatenate(self.documents) == term
+        )
+        weights = pd.Series(frequencies).apply(
+            TFIDF.weigh_term, args=(frequency_in_collection, self.N)
+        )
+        return weights
+
+    def generate_matrix(self):
+        for term, row in self.matrix.iterrows():
+            self.matrix.loc[term] = self.weigh_row(term)
+
+        return self.matrix
+
+    def similarity(document, query):
+        return document.dot(query) / (np.linalg.norm(document) * np.linalg.norm(query))
+
+    def rank(documents, query):
+        ranked_documents = (
+            documents.apply(TFIDF.similarity, args=(query,))
+            .T[0]
+            .sort_values(ascending=False)
+        )
+        return np.array(ranked_documents.index)
+
+
 class BM25:
     def __init__(self, documents, terms):
         self.K = 1.2
@@ -104,16 +149,17 @@ def main():
     terms = np.array(sorted(list(set([term for l in tokens_list for term in l]))))
     query = np.array(query.split())
 
-    # K = 1.2
-    # b = 0.75
-    # bm_matrix = generate_bm_matrix(tokens_list, terms, K, b)
+    tfidf = TFIDF(tokens_list, terms)
+    tfidf.generate_matrix()
+    query_weights = TFIDF(np.array([query]), terms)
+    query_weights.generate_matrix()
+    tfidf_ranks = TFIDF.rank(tfidf.matrix, query_weights.matrix)
+    print(tfidf_ranks)
 
     bm25 = BM25(tokens_list, terms)
     bm25.generate_bm_matrix()
-    print(bm25.matrix)
-
-    document_ranks = bm25.rank(query)
-    print(document_ranks)
+    bm25_ranks = bm25.rank(query)
+    print(bm25_ranks)
 
 
 if __name__ == "__main__":
