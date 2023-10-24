@@ -140,10 +140,8 @@ class Evaluator:
             if i == 0 or i != len(A) and A[i] not in R or not len(np.intersect1d(a, R)):
                 continue
 
-            print(a)
             recall = Evaluator.recall(a, R)
             precision = Evaluator.precision(a, R)
-            print(a, R, recall, precision)
             new_row = {"recall": recall, "precision": precision}
             rp.loc[len(rp)] = new_row
 
@@ -153,9 +151,14 @@ class Evaluator:
         index = np.array(range(10 + 1)) / 10
         ip = pd.DataFrame(columns=["precision"], index=index)
 
-        for idx, row in rec_and_pre.iterrows():
-            indexes = index[index <= row["recall"]]
-            ip.loc[indexes] = rec_and_pre["precision"].loc[idx:].max()
+        for idx, row in ip.iterrows():
+            # indexes = index[row["recall"] >= idx]
+            # print(ip["precision"].loc[idx:])
+            rp = rec_and_pre[rec_and_pre["recall"] >= idx]
+            if not len(rp):
+                ip.loc[idx] = 0
+            else:
+                ip.loc[idx] = rp["precision"].max()
 
         return ip
 
