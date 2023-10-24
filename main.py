@@ -135,9 +135,9 @@ class Evaluator:
     def recall_and_precision(A, R):
         rp = pd.DataFrame(columns=["recall", "precision"])
 
-        for i in range(0, len(A) + 1):
+        for i in range(1, len(A) + 1):
             a = A[:i]
-            if i == 0 or i != len(A) and A[i] not in R or not len(np.intersect1d(a, R)):
+            if A[i-1] not in R:
                 continue
 
             recall = Evaluator.recall(a, R)
