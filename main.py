@@ -163,8 +163,7 @@ class Evaluator:
     def mean_average_precision(rec_and_pre, R_length):
         return rec_and_pre["precision"].sum() / R_length
 
-
-def main():
+def ex1_input():
     # documentos
     dictionary = np.array(
         [
@@ -178,6 +177,46 @@ def main():
     stopwords = ["a", "o", "e", "é", "de", "do", "no", "são"]  # lista de stopwords
     query = "xadrez peã caval torr"  # consulta
     separators = [" ", ",", ".", "!", "?"]  # separadores para tokenizacao
+    R = np.array([1, 2])
+
+    print("\n*** Exemplo 1:")
+    
+    return dictionary, stopwords, query, separators, R
+def ex2_input():
+    # documentos
+    dictionary = np.array(
+        [
+            'Parasita é o grande vencedor do Oscar 2020, com quatro prêmios',
+            'Green Book, Roma e Bohemian Rhapsody são os principais vencedores do Oscar 2019',
+            'Oscar 2020: Confira lista completa de vencedores. Parasita e 1917 foram os grandes vencedores da noite',
+            'Em boa fase, Oscar sonha em jogar a Copa do Mundo da Rússia',
+            'Conheça os indicados ao Oscar 2020; Cerimônia de premiação acontece em fevereiro',
+            'Oscar Schmidt receberá Troféu no Prêmio Brasil Olímpico 2019. Jogador de basquete com mais pontos em Jogos Olímpicos.',
+            'Seleção brasileira vai observar de 35 a 40 jogadores para definir lista da Copa América',
+            'Oscar 2020: saiba como é a escolha dos jurados e como eles votam',
+            'Bem, Amigos! discute lista da Seleção, e Galvão dá recado a Tite: Cadê o Luan?',
+            'IFAL-Maceió convoca aprovados em lista de espera do SISU para chamada oral',
+            'Arrascaeta e Matías Viña são convocados pelo Uruguai para eliminatórias da Copa. Além deles, há outros destaques na lista.',
+            'Oscar do Vinho: confira os rótulos de destaque da safra 2018',
+            'Parasita é o vencedor da Palma de Ouro no Festival de Cannes',
+            'Estatísticas. Brasileirão Série A: Os artilheiros e garçons da temporada 2020',
+            'Setembro chegou! Confira o calendário da temporada 2020/2021 do futebol europeu'
+        ]
+    )
+    stopwords=['a', 'o', 'e', 'é', 'de', 'do', 'da', 'no', 'na', 'são', 'dos', 'com','como', 'eles', 'em', 'os', 'ao', 'para', 'pelo'] #lista de stopwords
+    query='oscar 2020' #consulta
+    separators=[' ',',','.','!','?',':',';','/'] #separadores para tokenizacao
+    R = np.array([1, 3, 5, 8])
+
+    print("\n*** Exemplo 2:")
+    
+    return dictionary, stopwords, query, separators, R
+
+def exec_example(dictionary, stopwords, query, separators, R):
+    print(f"dictionary = {dictionary}")
+    print(f"stopwords = {stopwords}")
+    print(f"query = {query}")
+    print(f"separators = {separators}")
 
     # normalize / tokenize
     normalized = np.array([normalize(s) for s in dictionary])
@@ -202,7 +241,6 @@ def main():
 
     # avaliation / tfidf
     print("\n===> Avaliating TF-IDF")
-    R = np.array([1, 2])
     A = tfidf_ranks
     recall_and_precision = Evaluator.recall_and_precision(A, R)
     print(f"\n+ Recall and precision:\n{recall_and_precision}")
@@ -215,7 +253,6 @@ def main():
 
     # avaliation / BM25
     print("\n===> Avaliating BM25")
-    R = np.array([1, 2])
     A = np.array(bm25_ranks.index)
     recall_and_precision = Evaluator.recall_and_precision(A, R)
     print(f"\n+ Recall and precision:\n{recall_and_precision}")
@@ -225,6 +262,10 @@ def main():
         recall_and_precision, len(R)
     )
     print(f"\n+ Mean average precision:\n{mean_average_precision}\n")
+
+def main():
+    exec_example(*ex1_input())
+    exec_example(*ex2_input())
 
 
 if __name__ == "__main__":
