@@ -31,48 +31,53 @@ def remove_stopwords(tokens_list, stopwords):
     ]
 
 
-def weigh_term(frequency, K, b, N, doclens, avg_doclen, ni):
-    return (
-        ((K + 1) * frequency.iloc[0])
-        / (
-            K * ((1 - b) + b * (doclens[frequency.name] / avg_doclen))
-            + frequency.iloc[0]
+class BM25:
+    def __init__(self, documents, terms):
+        self.K = 1.2
+        self.b = 0.75
+        self.N = len(documents)
+        self.documents = documents
+
+        self.matrix = pd.DataFrame(index=range(len(documents)), columns=terms)
+        self.doclens = list(
+            map(lambda doc: sum(map(lambda word: len(word), doc)), documents)
         )
-        * np.log((N - ni + 0.5) / (ni + 0.5) + 1)
-        if frequency.iloc[0] > 0
-        else 0
-    )
-
-
-def weigh_row(row, documents, term, K, b, N, doclens, avg_doclen):
-    frequencies = np.array(
-        list(map(lambda doc: np.count_nonzero(doc == term), documents))
-    )
-    N = len(documents)
-    ni = np.count_nonzero(list(map(lambda freq: freq > 0, frequencies)))
-    weights = pd.DataFrame(frequencies).apply(
-        weigh_term, args=(K, b, N, doclens, avg_doclen, ni), axis=1
-    )
-    return weights
-
-
-def generate_bm_matrix(documents, terms, K, b):
-    bm_matrix = pd.DataFrame(index=terms, columns=range(len(documents)))
-    N = len(documents)
-    doclens = list(map(lambda doc: sum(map(lambda word: len(word), doc)), documents))
-    avg_doclen = np.mean(
-        list(map(lambda doc: sum(map(lambda w: len(w), doc)), documents))
-    )
-    for term, row in bm_matrix.iterrows():
-        bm_matrix.loc[term] = weigh_row(
-            row, documents, term, K, b, N, doclens, avg_doclen
+        self.avg_doclen = np.mean(
+            list(map(lambda doc: sum(map(lambda w: len(w), doc)), documents))
         )
 
-    return bm_matrix
+    def weigh_term(frequency, K, b, N, doclens, avg_doclen, ni):
+        return (
+            ((K + 1) * frequency.iloc[0])
+            / (
+                K * ((1 - b) + b * (doclens[frequency.name] / avg_doclen))
+                + frequency.iloc[0]
+            )
+            * np.log((N - ni + 0.5) / (ni + 0.5) + 1)
+            if frequency.iloc[0] > 0
+            else 0
+        )
 
+    def weigh_col(self, term):
+        frequencies = np.array(
+            list(map(lambda doc: np.count_nonzero(doc == term), self.documents))
+        )
+        ni = np.count_nonzero(list(map(lambda freq: freq > 0, frequencies)))
+        weights = pd.DataFrame(frequencies).apply(
+            BM25.weigh_term,
+            args=(self.K, self.b, self.N, self.doclens, self.avg_doclen, ni),
+            axis=1,
+        )
+        return weights
 
-def rank(documents, query):
-    return documents.loc[query].sum().sort_values(ascending=False)
+    def generate_bm_matrix(self):
+        for term in self.matrix:
+            self.matrix[term] = self.weigh_col(term)
+
+        return self.matrix
+
+    def rank(self, query):
+        return self.matrix[query].T.sum().sort_values(ascending=False)
 
 
 def main():
@@ -99,11 +104,15 @@ def main():
     terms = np.array(sorted(list(set([term for l in tokens_list for term in l]))))
     query = np.array(query.split())
 
-    K = 1.2
-    b = 0.75
-    bm_matrix = generate_bm_matrix(tokens_list, terms, K, b)
+    # K = 1.2
+    # b = 0.75
+    # bm_matrix = generate_bm_matrix(tokens_list, terms, K, b)
 
-    document_ranks = rank(bm_matrix, query)
+    bm25 = BM25(tokens_list, terms)
+    bm25.generate_bm_matrix()
+    print(bm25.matrix)
+
+    document_ranks = bm25.rank(query)
     print(document_ranks)
 
 
