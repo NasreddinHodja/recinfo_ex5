@@ -162,6 +162,9 @@ class Evaluator:
 
         return ip
 
+    def mean_average_precision(rec_and_pre, R_length):
+        return rec_and_pre["precision"].sum() / R_length
+
 
 def main():
     # documentos
@@ -200,13 +203,17 @@ def main():
     # print(bm25_ranks.index)
 
     # avaliation
-    R = np.array([1, 2, 6, 9])
+    R = np.array([3, 5, 9])
     # A = tfidf_ranks
-    A = np.array([9, 3, 4, 1, 2])
+    A = np.array([1, 3, 5, 9, 2])
     recall_and_precision = Evaluator.recall_and_precision(A, R)
     print(recall_and_precision)
     interpolated_precision = Evaluator.interpolated_precision(recall_and_precision)
     print(interpolated_precision)
+    mean_average_precision = Evaluator.mean_average_precision(
+        recall_and_precision, len(R)
+    )
+    print(mean_average_precision)
 
 
 if __name__ == "__main__":
