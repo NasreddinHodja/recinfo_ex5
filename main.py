@@ -152,8 +152,6 @@ class Evaluator:
         ip = pd.DataFrame(columns=["precision"], index=index)
 
         for idx, row in ip.iterrows():
-            # indexes = index[row["recall"] >= idx]
-            # print(ip["precision"].loc[idx:])
             rp = rec_and_pre[rec_and_pre["recall"] >= idx]
             if not len(rp):
                 ip.loc[idx] = 0
@@ -202,18 +200,31 @@ def main():
     bm25_ranks = bm25.rank(query)
     # print(bm25_ranks.index)
 
-    # avaliation
-    R = np.array([3, 5, 9])
-    # A = tfidf_ranks
-    A = np.array([1, 3, 5, 9, 2])
+    # avaliation / tfidf
+    print("\n===> Avaliating TF-IDF")
+    R = np.array([1, 2])
+    A = tfidf_ranks
     recall_and_precision = Evaluator.recall_and_precision(A, R)
-    print(recall_and_precision)
+    print(f"\n+ Recall and precision:\n{recall_and_precision}")
     interpolated_precision = Evaluator.interpolated_precision(recall_and_precision)
-    print(interpolated_precision)
+    print(f"\n+ Interpolated precision:\n{interpolated_precision}")
     mean_average_precision = Evaluator.mean_average_precision(
         recall_and_precision, len(R)
     )
-    print(mean_average_precision)
+    print(f"\n+ Mean average precision:\n{mean_average_precision}\n")
+
+    # avaliation / BM25
+    print("\n===> Avaliating BM25")
+    R = np.array([1, 2])
+    A = np.array(bm25_ranks.index)
+    recall_and_precision = Evaluator.recall_and_precision(A, R)
+    print(f"\n+ Recall and precision:\n{recall_and_precision}")
+    interpolated_precision = Evaluator.interpolated_precision(recall_and_precision)
+    print(f"\n+ Interpolated precision:\n{interpolated_precision}")
+    mean_average_precision = Evaluator.mean_average_precision(
+        recall_and_precision, len(R)
+    )
+    print(f"\n+ Mean average precision:\n{mean_average_precision}\n")
 
 
 if __name__ == "__main__":
