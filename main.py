@@ -73,7 +73,10 @@ class TFIDF:
             .T[0]
             .sort_values(ascending=False)
         )
-        return np.array(ranked_documents.index)
+        ranked_documents = pd.DataFrame(
+            {"document": ranked_documents.index, "score": ranked_documents.to_list()}
+        )
+        return ranked_documents
 
 
 class BM25:
@@ -122,7 +125,11 @@ class BM25:
         return self.matrix
 
     def rank(self, query):
-        return self.matrix[query].T.sum().sort_values(ascending=False)
+        ranked_documents = self.matrix[query].T.sum().sort_values(ascending=False)
+        ranked_documents = pd.DataFrame(
+            {"document": ranked_documents.index, "score": ranked_documents.to_list()}
+        )
+        return ranked_documents
 
 
 class Evaluator:
@@ -162,6 +169,59 @@ class Evaluator:
 
     def mean_average_precision(rec_and_pre, R_length):
         return rec_and_pre["precision"].sum() / R_length
+
+
+def exec_example(dictionary, stopwords, query, separators, R):
+    print(f"dictionary = {dictionary}")
+    print(f"stopwords = {stopwords}")
+    print(f"query = {query}")
+    print(f"separators = {separators}\n")
+    print(f"R = {R}")
+
+    # normalize / tokenize
+    normalized = np.array([normalize(s) for s in dictionary])
+    tokens_list = np.array([tokenize(s, separators) for s in normalized], dtype=object)
+    tokens_list = remove_stopwords(tokens_list, stopwords)
+
+    terms = np.array(sorted(list(set([term for l in tokens_list for term in l]))))
+    query = np.array(query.split())
+
+    # retrieval
+    tfidf = TFIDF(tokens_list, terms)
+    tfidf.generate_matrix()
+    query_weights = TFIDF(np.array([query]), terms)
+    query_weights.generate_matrix()
+    tfidf_ranks = TFIDF.rank(tfidf.matrix, query_weights.matrix)
+
+    bm25 = BM25(tokens_list, terms)
+    bm25.generate_bm_matrix()
+    bm25_ranks = bm25.rank(query)
+
+    # avaliation: tfidf
+    print("\n===> Avaliating TF-IDF")
+    print(f"\n+ Ranks:\n{tfidf_ranks}\n")
+    A = np.array(tfidf_ranks["document"])
+    recall_and_precision = Evaluator.recall_and_precision(A, R)
+    print(f"\n+ Recall and precision:\n{recall_and_precision}")
+    interpolated_precision = Evaluator.interpolated_precision(recall_and_precision)
+    print(f"\n+ Interpolated precision:\n{interpolated_precision}")
+    mean_average_precision = Evaluator.mean_average_precision(
+        recall_and_precision, len(R)
+    )
+    print(f"\n+ Mean average precision:\n{mean_average_precision}\n")
+
+    # avaliation: BM25
+    print("\n===> Avaliating BM25")
+    print(f"\n+ Ranks:\n{bm25_ranks}\n")
+    A = np.array(bm25_ranks["document"])
+    recall_and_precision = Evaluator.recall_and_precision(A, R)
+    print(f"\n+ Recall and precision:\n{recall_and_precision}")
+    interpolated_precision = Evaluator.interpolated_precision(recall_and_precision)
+    print(f"\n+ Interpolated precision:\n{interpolated_precision}")
+    mean_average_precision = Evaluator.mean_average_precision(
+        recall_and_precision, len(R)
+    )
+    print(f"\n+ Mean average precision:\n{mean_average_precision}\n")
 
 
 def ex1_input():
@@ -243,58 +303,6 @@ def ex2_input():
     print("\n*** Exemplo 2:")
 
     return dictionary, stopwords, query, separators, R
-
-
-def exec_example(dictionary, stopwords, query, separators, R):
-    print(f"dictionary = {dictionary}")
-    print(f"stopwords = {stopwords}")
-    print(f"query = {query}")
-    print(f"separators = {separators}\n")
-
-    # normalize / tokenize
-    normalized = np.array([normalize(s) for s in dictionary])
-    tokens_list = np.array([tokenize(s, separators) for s in normalized], dtype=object)
-    tokens_list = remove_stopwords(tokens_list, stopwords)
-
-    terms = np.array(sorted(list(set([term for l in tokens_list for term in l]))))
-    query = np.array(query.split())
-
-    # retrieval
-    tfidf = TFIDF(tokens_list, terms)
-    tfidf.generate_matrix()
-    query_weights = TFIDF(np.array([query]), terms)
-    query_weights.generate_matrix()
-    tfidf_ranks = TFIDF.rank(tfidf.matrix, query_weights.matrix)
-    print(f"+ TF-IDF ranks:\n{tfidf_ranks}\n")
-
-    bm25 = BM25(tokens_list, terms)
-    bm25.generate_bm_matrix()
-    bm25_ranks = bm25.rank(query)
-    print(f"+ BM25 ranks:\n{np.array(bm25_ranks.index)}\n")
-
-    # avaliation / tfidf
-    print("\n===> Avaliating TF-IDF")
-    A = tfidf_ranks
-    recall_and_precision = Evaluator.recall_and_precision(A, R)
-    print(f"\n+ Recall and precision:\n{recall_and_precision}")
-    interpolated_precision = Evaluator.interpolated_precision(recall_and_precision)
-    print(f"\n+ Interpolated precision:\n{interpolated_precision}")
-    mean_average_precision = Evaluator.mean_average_precision(
-        recall_and_precision, len(R)
-    )
-    print(f"\n+ Mean average precision:\n{mean_average_precision}\n")
-
-    # avaliation / BM25
-    print("\n===> Avaliating BM25")
-    A = np.array(bm25_ranks.index)
-    recall_and_precision = Evaluator.recall_and_precision(A, R)
-    print(f"\n+ Recall and precision:\n{recall_and_precision}")
-    interpolated_precision = Evaluator.interpolated_precision(recall_and_precision)
-    print(f"\n+ Interpolated precision:\n{interpolated_precision}")
-    mean_average_precision = Evaluator.mean_average_precision(
-        recall_and_precision, len(R)
-    )
-    print(f"\n+ Mean average precision:\n{mean_average_precision}\n")
 
 
 def main():

@@ -1,0 +1,192 @@
+
+*** Exemplo 1:
+dictionary = ['O peã e o caval são pec de xadrez. O caval é o melhor do jog.'
+ 'A jog envolv a torr, o peã e o rei.' 'O peã lac o boi' 'Caval de rodei!'
+ 'Polic o jog no xadrez.']
+stopwords = ['a', 'o', 'e', 'é', 'de', 'do', 'no', 'são']
+query = xadrez peã caval torr
+separators = [' ', ',', '.', '!', '?']
+
+R = [1 2]
+
+===> Avaliating TF-IDF
+
++ Ranks:
+   document     score
+0         0  0.659906
+1         1  0.447214
+2         3  0.353553
+3         2  0.288675
+4         4  0.288675
+
+
++ Recall and precision:
+   recall  precision
+0     0.5        0.5
+1     1.0        0.5
+
++ Interpolated precision:
+    precision
+0.0       0.5
+0.1       0.5
+0.2       0.5
+0.3       0.5
+0.4       0.5
+0.5       0.5
+0.6       0.5
+0.7       0.5
+0.8       0.5
+0.9       0.5
+1.0       0.5
+
++ Mean average precision:
+0.5
+
+
+===> Avaliating BM25
+
++ Ranks:
+   document     score
+0         0  2.011662
+1         1  1.817777
+2         3  1.045524
+3         4  0.935404
+4         2  0.663213
+
+
++ Recall and precision:
+   recall  precision
+0     0.5        0.5
+1     1.0        0.4
+
++ Interpolated precision:
+    precision
+0.0       0.5
+0.1       0.5
+0.2       0.5
+0.3       0.5
+0.4       0.5
+0.5       0.5
+0.6       0.4
+0.7       0.4
+0.8       0.4
+0.9       0.4
+1.0       0.4
+
++ Mean average precision:
+0.45
+
+
+*** Exemplo 2:
+dictionary = ['Parasita é o grande vencedor do Oscar 2020, com quatro prêmios'
+ 'Green Book, Roma e Bohemian Rhapsody são os principais vencedores do Oscar 2019'
+ 'Oscar 2020: Confira lista completa de vencedores. Parasita e 1917 foram os grandes vencedores da noite'
+ 'Em boa fase, Oscar sonha em jogar a Copa do Mundo da Rússia'
+ 'Conheça os indicados ao Oscar 2020; Cerimônia de premiação acontece em fevereiro'
+ 'Oscar Schmidt receberá Troféu no Prêmio Brasil Olímpico 2019. Jogador de basquete com mais pontos em Jogos Olímpicos.'
+ 'Seleção brasileira vai observar de 35 a 40 jogadores para definir lista da Copa América'
+ 'Oscar 2020: saiba como é a escolha dos jurados e como eles votam'
+ 'Bem, Amigos! discute lista da Seleção, e Galvão dá recado a Tite: Cadê o Luan?'
+ 'IFAL-Maceió convoca aprovados em lista de espera do SISU para chamada oral'
+ 'Arrascaeta e Matías Viña são convocados pelo Uruguai para eliminatórias da Copa. Além deles, há outros destaques na lista.'
+ 'Oscar do Vinho: confira os rótulos de destaque da safra 2018'
+ 'Parasita é o vencedor da Palma de Ouro no Festival de Cannes'
+ 'Estatísticas. Brasileirão Série A: Os artilheiros e garçons da temporada 2020'
+ 'Setembro chegou! Confira o calendário da temporada 2020/2021 do futebol europeu']
+stopwords = ['a', 'o', 'e', 'é', 'de', 'do', 'da', 'no', 'na', 'são', 'dos', 'com', 'como', 'eles', 'em', 'os', 'ao', 'para', 'pelo']
+query = oscar 2020
+separators = [' ', ',', '.', '!', '?', ':', ';', '/']
+
+R = [1 3 5 8]
+
+===> Avaliating TF-IDF
+
++ Ranks:
+    document     score
+0          7  0.577350
+1          0  0.534522
+2          4  0.500000
+3          2  0.308348
+4         11  0.267261
+5         13  0.267261
+6          3  0.250000
+7          1  0.235702
+8         14  0.235702
+9          5  0.188982
+10         6  0.000000
+11         8  0.000000
+12         9  0.000000
+13        10  0.000000
+14        12  0.000000
+
+
++ Recall and precision:
+   recall  precision
+0    0.25   0.142857
+1    0.50   0.250000
+2    0.75   0.300000
+3    1.00   0.333333
+
++ Interpolated precision:
+    precision
+0.0  0.333333
+0.1  0.333333
+0.2  0.333333
+0.3  0.333333
+0.4  0.333333
+0.5  0.333333
+0.6  0.333333
+0.7  0.333333
+0.8  0.333333
+0.9  0.333333
+1.0  0.333333
+
++ Mean average precision:
+0.256547619047619
+
+
+===> Avaliating BM25
+
++ Ranks:
+    document     score
+0          7  1.852999
+1          0  1.691779
+2          4  1.501731
+3          2  1.333238
+4         13  0.888473
+5         14  0.870018
+6          3  0.738800
+7         11  0.714857
+8          1  0.628319
+9          5  0.514698
+10         6  0.000000
+11         8  0.000000
+12         9  0.000000
+13        10  0.000000
+14        12  0.000000
+
+
++ Recall and precision:
+   recall  precision
+0    0.25   0.142857
+1    0.50   0.222222
+2    0.75   0.300000
+3    1.00   0.333333
+
++ Interpolated precision:
+    precision
+0.0  0.333333
+0.1  0.333333
+0.2  0.333333
+0.3  0.333333
+0.4  0.333333
+0.5  0.333333
+0.6  0.333333
+0.7  0.333333
+0.8  0.333333
+0.9  0.333333
+1.0  0.333333
+
++ Mean average precision:
+0.2496031746031746
+
