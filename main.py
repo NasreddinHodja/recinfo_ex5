@@ -8,7 +8,6 @@ DRE: 116183736
 import numpy as np
 import pandas as pd
 import re
-import math
 
 
 def tokenize(s, separators):
@@ -39,6 +38,7 @@ class TFIDF:
         self.matrix = pd.DataFrame(index=terms, columns=range(len(documents)))
         self.N = len(documents)
 
+    @staticmethod
     def weigh_term(frequency, frequency_in_collection, N):
         return (
             1 + np.log2(frequency) * np.log2(N / frequency_in_collection)
@@ -59,14 +59,16 @@ class TFIDF:
         return weights
 
     def generate_matrix(self):
-        for term, row in self.matrix.iterrows():
+        for term, _ in self.matrix.iterrows():
             self.matrix.loc[term] = self.weigh_row(term)
 
         return self.matrix
 
+    @staticmethod
     def similarity(document, query):
         return document.dot(query) / (np.linalg.norm(document) * np.linalg.norm(query))
 
+    @staticmethod
     def rank(documents, query):
         ranked_documents = (
             documents.apply(TFIDF.similarity, args=(query,))
@@ -94,6 +96,7 @@ class BM25:
             list(map(lambda doc: sum(map(lambda w: len(w), doc)), documents))
         )
 
+    @staticmethod
     def weigh_term(frequency, K, b, N, doclens, avg_doclen, ni):
         return (
             ((K + 1) * frequency.iloc[0])
@@ -133,12 +136,15 @@ class BM25:
 
 
 class Evaluator:
+    @staticmethod
     def recall(A, R):
         return len(np.intersect1d(A, R)) / len(R)
 
+    @staticmethod
     def precision(A, R):
         return len(np.intersect1d(A, R)) / len(A)
 
+    @staticmethod
     def recall_and_precision(A, R):
         rp = pd.DataFrame(columns=["recall", "precision"])
 
@@ -154,11 +160,12 @@ class Evaluator:
 
         return rp.sort_values("recall")
 
+    @staticmethod
     def interpolated_precision(rec_and_pre):
         index = np.array(range(10 + 1)) / 10
         ip = pd.DataFrame(columns=["precision"], index=index)
 
-        for idx, row in ip.iterrows():
+        for idx, _ in ip.iterrows():
             rp = rec_and_pre[rec_and_pre["recall"] >= idx]
             if not len(rp):
                 ip.loc[idx] = 0
@@ -167,6 +174,7 @@ class Evaluator:
 
         return ip
 
+    @staticmethod
     def mean_average_precision(rec_and_pre, R_length):
         return rec_and_pre["precision"].sum() / R_length
 
