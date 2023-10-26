@@ -5,9 +5,9 @@ Author: Tomás Bizet de Barros
 DRE: 116183736
 """
 
+import re
 import numpy as np
 import pandas as pd
-import re
 
 
 def tokenize(s, separators):
@@ -89,12 +89,8 @@ class BM25:
         self.documents = documents
 
         self.matrix = pd.DataFrame(index=range(len(documents)), columns=terms)
-        self.doclens = list(
-            map(lambda doc: sum(map(lambda word: len(word), doc)), documents)
-        )
-        self.avg_doclen = np.mean(
-            list(map(lambda doc: sum(map(lambda w: len(w), doc)), documents))
-        )
+        self.doclens = list(map(lambda doc: sum(map(len, doc)), documents))
+        self.avg_doclen = np.mean(list(map(lambda doc: sum(map(len, doc)), documents)))
 
     @staticmethod
     def weigh_term(frequency, K, b, N, doclens, avg_doclen, ni):
@@ -167,7 +163,7 @@ class Evaluator:
 
         for idx, _ in ip.iterrows():
             rp = rec_and_pre[rec_and_pre["recall"] >= idx]
-            if not len(rp):
+            if len(rp) == 0:
                 ip.loc[idx] = 0
             else:
                 ip.loc[idx] = rp["precision"].max()
